@@ -14,6 +14,7 @@ func main() {
 	}
 
 	fmt.Printf("\n")
+	fmt.Print(repl.MYLANG_LOGO)
 	fmt.Printf("╔═══════════════════════════════════════════════════════════╗\n")
 	fmt.Printf("║                                                           ║\n")
 	fmt.Printf("║          Welcome to MyLang Programming Language!          ║\n")
