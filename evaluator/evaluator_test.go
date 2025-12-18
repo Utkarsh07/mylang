@@ -34,8 +34,9 @@ func testEval(input string) object.Object {
 	l := lexer.New(input)
 	p := parser.New(l)
 	program := p.ParseProgram()
+	env := object.NewEnvironment()
 
-	return Eval(program)
+	return Eval(program, env)
 }
 
 func testNullObject(t *testing.T, obj object.Object) bool {
@@ -217,6 +218,10 @@ func TestErrorHandling(t *testing.T) {
 			`,
 			"Unknown Operator: BOOLEAN + BOOLEAN",
 		},
+		{
+			"foobar",
+			"Identifier Not Found: foobar",
+		},
 	}
 	for _, tt := range tests {
 		evaluated := testEval(tt.input)
@@ -231,4 +236,53 @@ func TestErrorHandling(t *testing.T) {
 				tt.expectedMessage, errObject.Message)
 		}
 	}
+}
+
+func TestFunctionObject(t *testing.T) {
+
+	input := "function(x) { x + 2; };"
+	evaluated := testEval(input)
+
+	fn, ok := evaluated.(*object.Function)
+	if !ok {
+		t.Fatalf("Object is not Function. Got=%T (%+v)", evaluated, evaluated)
+	}
+	if len(fn.Parameters) != 1 {
+		t.Fatalf("Function has wrong parameters. Parameters=%+v",
+			fn.Parameters)
+	}
+	if fn.Parameters[0].String() != "x" {
+		t.Fatalf("Parameter is not 'x'. Got=%q", fn.Parameters[0])
+	}
+	expectedBody := "(x + 2)"
+	if fn.Body.String() != expectedBody {
+		t.Fatalf("Body is not %q. Got=%q", expectedBody, fn.Body.String())
+	}
+}
+
+func TestFunctionApplication(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"let identity = function(x) { x; }; identity(5);", 5},
+		{"let identity = function(x) { return x; }; identity(5);", 5},
+		{"let double = function(x) { x * 2; }; double(5);", 10},
+		{"let add = function(x, y) { x + y; }; add(5, 5);", 10},
+		{"let add = function(x, y) { x + y; }; add(5 + 5, add(5, 5));", 20},
+		{"function(x) { x; }(5)", 5},
+	}
+	for _, tt := range tests {
+		testIntegerObject(t, testEval(tt.input), tt.expected)
+	}
+}
+
+func TestClosures(t *testing.T) {
+	input := `
+	let newAdder = function(x) {
+		function(y) { x + y };
+	};
+	let addTwo = newAdder(2);
+	addTwo(2);`
+	testIntegerObject(t, testEval(input), 4)
 }

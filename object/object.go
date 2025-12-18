@@ -1,7 +1,10 @@
 package object
 
 import (
+	"bytes"
 	"fmt"
+	"mylang/ast"
+	"strings"
 )
 
 type ObjectType string
@@ -9,6 +12,7 @@ type ObjectType string
 const (
 	INTEGER_OBJ      = "INTEGER"
 	BOOLEAN_OBJ      = "BOOLEAN"
+	FUNCTION_OBJ     = "FUNCTION"
 	NULL_OBJ         = "NULL"
 	RETURN_VALUE_OBJ = "RETURN_VALUE"
 	ERROR_OBJ        = "ERROR"
@@ -63,3 +67,28 @@ type Error struct {
 
 func (e *Error) Inspect() string  { return "ERROR: " + e.Message }
 func (e *Error) Type() ObjectType { return ERROR_OBJ }
+
+type Function struct {
+	Parameters []*ast.Identifier
+	Body       *ast.BlockStatement
+	Env        *Environment
+}
+
+func (f *Function) Type() ObjectType { return FUNCTION_OBJ }
+func (f *Function) Inspect() string {
+	var out bytes.Buffer
+
+	parameters := []string{}
+	for _, p := range f.Parameters {
+		parameters = append(parameters, p.String())
+	}
+
+	out.WriteString("function")
+	out.WriteString("(")
+	out.WriteString(strings.Join(parameters, ", "))
+	out.WriteString(") {\n")
+	out.WriteString(f.Body.String())
+	out.WriteString("/n}")
+
+	return out.String()
+}
