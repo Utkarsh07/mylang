@@ -73,12 +73,26 @@ func (l *Lexer) makeTwoCharToken(tokenType token.TokenType) token.Token {
 	return token.Token{Type: tokenType, Literal: string(ch) + string(l.ch)}
 }
 
+func (l *Lexer) readString() string {
+	position := l.position + 1
+	for {
+		l.readChar()
+		if l.ch == '"' || l.ch == 0 {
+			break
+		}
+	}
+	return l.input[position:l.position]
+}
+
 func (l *Lexer) NextToken() token.Token {
 	var t token.Token
 
 	l.skipWhiteSpace()
 
 	switch l.ch {
+	case '"':
+		t.Type = token.STRING
+		t.Literal = l.readString()
 	case '=':
 		if l.peakChar() == '=' {
 			t = l.makeTwoCharToken(token.EQ)

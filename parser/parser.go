@@ -270,6 +270,10 @@ func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 	return expression
 }
 
+func (p *Parser) parseStringLiteral() ast.Expression {
+	return &ast.StringLiteral{Token: p.curToken, Value: p.curToken.Literal}
+}
+
 // -------------------------------------------------------------------------
 
 func New(l *lexer.Lexer) *Parser {
@@ -290,6 +294,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefixFunction(token.LPAREN, p.parseGroupedExpression)
 	p.registerPrefixFunction(token.IF, p.parseIfExpression)
 	p.registerPrefixFunction(token.FUNCTION, p.parseFunctionLiteral)
+	p.registerPrefixFunction(token.STRING, p.parseStringLiteral)
 
 	//Infix
 	p.infixParseFunctions = make(map[token.TokenType]infixParseFunction)
