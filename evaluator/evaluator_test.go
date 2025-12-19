@@ -300,3 +300,34 @@ func TestStringLiteral(t *testing.T) {
 		t.Errorf("String has wrong value. Got=%q", str.Value)
 	}
 }
+
+func TestBuiltinFunctions(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{
+		{`len("")`, 0},
+		{`len("five")`, 4},
+		{`len("hello world")`, 11},
+		{`len(1)`, "argument to `len` not supported, Got=INTEGER"},
+		{`len("one", "two")`, "Wrong number of arguments. Got=2, Expected=1"},
+	}
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		switch expected := tt.expected.(type) {
+		case int:
+			testIntegerObject(t, evaluated, int64(expected))
+		case string:
+			errObject, ok := evaluated.(*object.Error)
+			if !ok {
+				t.Errorf("Object is not Error. Got=%T (%+v)",
+					evaluated, evaluated)
+				continue
+			}
+			if errObject.Message != expected {
+				t.Errorf("Wrong error message. Expected=%q, Got=%q",
+					expected, errObject.Message)
+			}
+		}
+	}
+}
